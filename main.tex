@@ -1,0 +1,77 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\title{Life Expectancy Analysis: Data Processing and Fixed Effects Estimation}
+\author{Luis Alejandro Rubiano}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{Data Processing}
+
+We analyze the WHO Life Expectancy dataset. The data comprises 2,938 country-year observations across 22 variables. Preprocessing followed a two-tiered imputation strategy:
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+    \item \textbf{Type 2 missingness (structural):} Countries missing an entire variable across all years were removed, preserving statistical coherence.
+    \item \textbf{Type 1 missingness (sporadic):} Time-series interpolation was applied per country and variable, followed by forward and backward fill to ensure temporal continuity.
+\end{enumerate}
+
+We eliminated variables with multicollinearity risks or derivative redundancy:
+\begin{itemize}
+    \item \texttt{Total expenditure} = \texttt{GDP} × \texttt{percentage expenditure}
+    \item \texttt{Adult Mortality} $\approx$ inverse of \texttt{Life expectancy}
+    \item \texttt{infant deaths} highly collinear with \texttt{under-five deaths}
+\end{itemize}
+
+We log-transformed GDP to reduce skewness and discarded invariant categorical features (\texttt{is\_developed}). Final dataset: 2,128 observations across 133 countries.
+
+\section*{Statistical Analysis}
+
+We estimate a fixed-effects panel regression using \texttt{Life expectancy} as the outcome, with 15 time-varying predictors. The model controls for country-specific unobservables (e.g., institutions, geography) and clusters standard errors at the country level.
+
+\subsection*{Model Specification}
+\[
+y_{it} = \alpha_i + \beta X_{it} + u_{it}
+\]
+\vspace{-1em}
+\begin{itemize}
+    \item $y_{it}$: Life expectancy in country $i$ at year $t$
+    \item $X_{it}$: vector of health, demographic, and economic indicators
+    \item $\alpha_i$: country fixed effect
+    \item $u_{it}$: idiosyncratic error term
+\end{itemize}
+
+\subsection*{Model Results}
+\begin{itemize}
+    \item \textbf{Within $R^2$ = 0.455:} covariates explain 45.5\% of intra-country variation.
+    \item \textbf{Key coefficients (selected):}
+    \begin{itemize}
+        \item HIV/AIDS: $-0.40$ ($p<0.001$)
+        \item Income Composition: $+3.30$ ($p<0.001$)
+        \item Schooling: $+0.62$ ($p<0.001$)
+        \item GDP (log): $+0.53$ ($p=0.04$)
+    \end{itemize}
+    \item \textbf{Poolability test:} $p<0.001$ confirms necessity of fixed effects.
+\end{itemize}
+
+\section*{Key Insights \& Implications}
+
+\begin{enumerate}[label=\textbf{Insight \arabic*:}, leftmargin=1.2cm]
+    \item \textbf{HIV prevalence reduces life expectancy by 0.4 years per unit:} A stark and statistically robust relationship suggesting that targeted interventions in HIV/AIDS control can yield significant longevity benefits within countries.
+    
+    \item \textbf{Human capital drives longevity:} A one-point increase in education (schooling) is associated with a 0.62-year increase in life expectancy, underscoring the critical role of education in health outcomes.
+    
+    \item \textbf{Income composition outperforms raw GDP:} While GDP is significant, the income composition index has a larger and more stable impact, suggesting that inclusive economic structures enhance life expectancy more than absolute economic scale.
+\end{enumerate}
+
+\vspace{0.5em}
+These insights advocate for health and education-focused policies over purely growth-driven strategies in development agendas.
+
+\end{document}
